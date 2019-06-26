@@ -40,7 +40,7 @@ namespace Receive
                     };
 
                     channel.BasicConsume(queue: "task_queue",
-                        autoAck: true,
+                        autoAck: false,
                         consumer: consumer);
 
                     Console.WriteLine(" Press [Enter] to exit");
