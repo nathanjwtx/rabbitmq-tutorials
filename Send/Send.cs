@@ -10,10 +10,10 @@ namespace Send
         public static void Main(string[] args)
         {
 //            Tutorial1();
-            Tutorial2(args);
+            Tutorial2_NewTask(args);
         }
 
-        public static void Tutorial2(string[] args)
+        public static void Tutorial2_NewTask(string[] args)
         {
             var factory = new ConnectionFactory() {HostName = "localhost"};
             using (var connection = factory.CreateConnection())
@@ -21,7 +21,8 @@ namespace Send
                 using (var channel = connection.CreateModel())
                 {
                     channel.QueueDeclare(queue: "hello",
-                        durable: false,
+                        // setting durable to true stores the message if Rabbit crashes
+                        durable: true,
                         exclusive: false,
                         autoDelete: false,
                         arguments: null);
@@ -40,8 +41,8 @@ namespace Send
                 }
             }
 
-//            Console.WriteLine("Press [Enter] to exit");
-//            Console.ReadLine();
+            Console.WriteLine("Press [Enter] to exit");
+            Console.ReadLine();
         }
 
         private static string GetMessage(string[] args)
