@@ -11,10 +11,10 @@ namespace Receive
         public static void Main(string[] args)
         {
 //            Tutorial1();
-            Tutorial2();
+            Tutorial2_Worker();
         }
 
-        public static void Tutorial2()
+        public static void Tutorial2_Worker()
         {
             var factory = new ConnectionFactory() {HostName = "localhost"};
             using (var connection = factory.CreateConnection())
@@ -22,11 +22,14 @@ namespace Receive
                 using (var channel = connection.CreateModel())
                 {
                     channel.QueueDeclare(queue: "task_queue",
-                        durable: false,
+                        durable: true,
                         exclusive: false,
                         autoDelete: false,
                         arguments: null);
 
+                    channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                    Console.WriteLine(" [*] Waiting for messages!");
+                    
                     var consumer = new EventingBasicConsumer(channel);
                     consumer.Received += (model, ea) =>
                     {
