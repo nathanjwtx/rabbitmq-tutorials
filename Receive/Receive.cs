@@ -12,7 +12,51 @@ namespace Receive
         {
 //            Tutorial1();
 //            Tutorial2_Worker();
-            Tutorial3_ReceiveLogs();
+//            Tutorial3_ReceiveLogs();
+            Tutorial4_ReceiveLogsDirect(args);
+        }
+
+        public static void Tutorial4_ReceiveLogsDirect(string[] args)
+        {
+            var factory = new ConnectionFactory{HostName = "localhost"};
+            using (var connection = factory.CreateConnection())
+            {
+                using (var channel = connection.CreateModel())
+                {
+                    channel.ExchangeDeclare("direct_logs", "direct");
+                    var queueName = channel.QueueDeclare().QueueName;
+
+                    if (args.Length < 1)
+                    {
+                        Console.Error.WriteLine($"Usage: {Environment.GetCommandLineArgs()[0]} [info] [warning] [error]");
+                        Console.WriteLine(" Press [Enter] to exit");
+                        Console.ReadLine();
+                        Environment.ExitCode = 1;
+                        return;
+                    }
+
+                    foreach (var severity in args)
+                    {
+                        channel.QueueBind(queueName, "direct_logs", severity);
+                    }
+
+                    Console.WriteLine(" [*] waiting for messages");
+                    
+                    var consumer = new EventingBasicConsumer(channel);
+                    consumer.Received += (model, ea) =>
+                    {
+                        var body = ea.Body;
+                        var message = Encoding.UTF8.GetString(body);
+                        var routingKey = ea.RoutingKey;
+                        Console.WriteLine($" [x] received {routingKey}: {message}");
+                    };
+
+                    channel.BasicConsume(queueName, true, consumer);
+
+                    Console.WriteLine(" Press [Enter] to exit");
+                    Console.ReadLine();
+                }
+            }
         }
 
         public static void Tutorial3_ReceiveLogs()

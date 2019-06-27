@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using RabbitMQ.Client;
 using System.Text;
 using System.Threading;
@@ -11,9 +12,35 @@ namespace Send
         {
 //            Tutorial1();
 //            Tutorial2_NewTask(args);
-            Tutorial3_EmitLogs(args);
+//            Tutorial3_EmitLogs(args);
+            Tutorial4_Routing(args);
         }
 
+        public static void Tutorial4_Routing(string[] args)
+        {
+            var factory = new ConnectionFactory {HostName = "localhost"};
+            using (var connection = factory.CreateConnection())
+            {
+                using (var channel = connection.CreateModel())
+                {
+                    channel.ExchangeDeclare("direct_logs", "direct");
+
+                    var severity = args.Length > 0 ? args[0] : "info";
+                    var message = args.Length > 1
+                        ? string.Join(" ", args.Skip(1).ToArray())
+                        : "Hello world!";
+                    var body = Encoding.UTF8.GetBytes(message);
+
+                    channel.BasicPublish("direct_logs", severity, null, body);
+
+                    Console.WriteLine($" [x[ sent {severity}: {message}");
+                }
+            }
+
+            Console.WriteLine(" Press [Enter] to exit");
+            Console.ReadLine();
+        }
+        
         public static void Tutorial3_EmitLogs(string[] args)
         {
             var factory = new ConnectionFactory()
@@ -70,7 +97,6 @@ namespace Send
             Console.WriteLine("Press [Enter] to exit");
             Console.ReadLine();
         }
-        
         
         private static void Tutorial1()
         {
