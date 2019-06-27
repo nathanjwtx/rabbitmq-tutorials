@@ -26,14 +26,34 @@ namespace Receive
                 using (var channel = connection.CreateModel())
                 {
                     channel.ExchangeDeclare("topic_logs", "topic");
+                    var queueName = channel.QueueDeclare().QueueName;
+                    if (args.Length < 1)
+                    {
+                        Console.Error.WriteLine($"Usage: {Environment.GetCommandLineArgs()[0]} binding_key...");
+                        Console.WriteLine(" Press [Enter] to exit");
+                        Console.ReadLine();
+                        Environment.ExitCode = 1;
+                        return;
+                    }
 
-                    var routingKey = args.Length > 0 ? args[0] : "anonymous_info";
-                    var message = args.Length > 1
-                        ? string.Join(" ", args.Skip(1).ToArray())
-                        : "Hello world!!";
-                    var body = Encoding.UTF8.GetBytes(message);
-                    channel.BasicPublish("topic_logs", routingKey, null, body);
-                    Console.WriteLine($" [x] sent {routingKey}: {message}");
+                    foreach (var bindingKey in args)
+                    {
+                        channel.QueueBind(queueName, "topic_logs", bindingKey);
+                    }
+
+                    Console.WriteLine(" [*] waiting for messages. To exit press Ctrl+C");
+                    
+                    var consumer = new EventingBasicConsumer(channel);
+                    consumer.Received += (model, ea) =>
+                    {
+                        var body = ea.Body;
+                        var message = Encoding.UTF8.GetString(body);
+                        var routingKey = ea.RoutingKey;
+                        Console.WriteLine($" [x] received {routingKey}: {message}");
+                    };
+                    channel.BasicConsume(queueName, true, consumer);
+                    Console.WriteLine(" Press [enter] to exit");
+                    Console.ReadLine();
                 }
             }
         }
