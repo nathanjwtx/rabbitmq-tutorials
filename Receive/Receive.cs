@@ -12,8 +12,38 @@ namespace Receive
         {
 //            Tutorial1();
             Tutorial2_Worker();
+            Tutorial3_ReceiveLogs();
         }
 
+        public static void Tutorial3_ReceiveLogs()
+        {
+            var factory = new ConnectionFactory { HostName = "localhost"};
+            using (var connection = factory.CreateConnection())
+            {
+                using (var channel = connection.CreateModel())
+                {
+                    channel.ExchangeDeclare("logs", "fanout");
+                    var queueName = channel.QueueDeclare().QueueName;
+                    channel.QueueBind(queueName, "logs", "");
+
+                    Console.WriteLine($" [*] waiting for logs");
+                    
+                    var consumer = new EventingBasicConsumer(channel);
+                    consumer.Received += (model, ea) =>
+                    {
+                        var body = ea.Body;
+                        var message = Encoding.UTF8.GetString(body);
+                        Console.WriteLine($" [x] {message}");
+                    };
+
+                    channel.BasicConsume(queueName, true, consumer);
+
+                    Console.WriteLine(" Press [Enter] to exit");
+                    Console.ReadLine();
+                }
+            }
+        }
+        
         public static void Tutorial2_Worker()
         {
             var factory = new ConnectionFactory() {HostName = "localhost"};
