@@ -10,7 +10,33 @@ namespace Send
         public static void Main(string[] args)
         {
 //            Tutorial1();
-            Tutorial2_NewTask(args);
+//            Tutorial2_NewTask(args);
+            Tutorial3_EmitLogs(args);
+        }
+
+        public static void Tutorial3_EmitLogs(string[] args)
+        {
+            var factory = new ConnectionFactory()
+            {
+                HostName = "localhost"
+            };
+            using (var connection = factory.CreateConnection())
+            {
+                using (var channel = connection.CreateModel())
+                {
+                    channel.ExchangeDeclare(exchange: "logs", type: "fanout");
+
+                    var message = GetMessage(args);
+                    var body = Encoding.UTF8.GetBytes((message));
+                    channel.BasicPublish(exchange: "logs",
+                        routingKey: "",
+                        basicProperties: null,
+                        body: body);
+                    Console.WriteLine($" [x] sent {message}");
+                }
+            }
+            Console.WriteLine(" Press [Enter] to exit");
+            Console.ReadLine();
         }
 
         public static void Tutorial2_NewTask(string[] args)
@@ -44,11 +70,7 @@ namespace Send
             Console.WriteLine("Press [Enter] to exit");
             Console.ReadLine();
         }
-
-        private static string GetMessage(string[] args)
-        {
-            return ((args.Length > 0) ? string.Join(" ", args) : "Hello World");
-        }
+        
         
         private static void Tutorial1()
         {
@@ -77,6 +99,11 @@ namespace Send
 
             Console.WriteLine("Press [Enter] to exit");
             Console.ReadLine();
+        }
+        
+        private static string GetMessage(string[] args)
+        {
+            return ((args.Length > 0) ? string.Join(" ", args) : "Hello World");
         }
     }
 }
