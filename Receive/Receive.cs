@@ -11,7 +11,7 @@ namespace Receive
         public static void Main(string[] args)
         {
 //            Tutorial1();
-            Tutorial2_Worker();
+//            Tutorial2_Worker();
             Tutorial3_ReceiveLogs();
         }
 
