@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -13,7 +14,28 @@ namespace Receive
 //            Tutorial1();
 //            Tutorial2_Worker();
 //            Tutorial3_ReceiveLogs();
-            Tutorial4_ReceiveLogsDirect(args);
+//            Tutorial4_ReceiveLogsDirect(args);
+            Tutorial5_ReceiveLogsTopic(args);
+        }
+
+        private static void Tutorial5_ReceiveLogsTopic(string[] args)
+        {
+            var factory = new ConnectionFactory {HostName = "localhost"};
+            using (var connection = factory.CreateConnection())
+            {
+                using (var channel = connection.CreateModel())
+                {
+                    channel.ExchangeDeclare("topic_logs", "topic");
+
+                    var routingKey = args.Length > 0 ? args[0] : "anonymous_info";
+                    var message = args.Length > 1
+                        ? string.Join(" ", args.Skip(1).ToArray())
+                        : "Hello world!!";
+                    var body = Encoding.UTF8.GetBytes(message);
+                    channel.BasicPublish("topic_logs", routingKey, null, body);
+                    Console.WriteLine($" [x] sent {routingKey}: {message}");
+                }
+            }
         }
 
         public static void Tutorial4_ReceiveLogsDirect(string[] args)
